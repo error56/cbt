@@ -82,9 +82,7 @@ void ExecutionThread::Run() {
       if (!cache_entry->merging_info.merging_performed &&
           cache_entry->merging_info.merging_available &&
           cache_entry->is_not_empty) {
-        if (TryToMergeBasicBlock(cache_entry)) {
-          // spdlog::info("A");
-        }
+        TryToMergeBasicBlock(cache_entry);
       }
 
       // If basic block is not empty, then just execute it on the real processor
