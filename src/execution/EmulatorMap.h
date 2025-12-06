@@ -5,9 +5,8 @@
 #include <memory>
 #include <vector>
 
-#include "ProcessState.h"
-
 #include "../emulator/instruction/data/BtInstructionEmulator.h"
+#include "../emulator/instruction/data/CdqeInstructionEmulator.h"
 #include "../emulator/instruction/data/CmpInstructionEmulator.h"
 #include "../emulator/instruction/data/LeaInstructionEmulator.h"
 #include "../emulator/instruction/data/MovInstructionEmulator.h"
@@ -30,6 +29,7 @@
 #include "../emulator/instruction/data/conditional/CmovpInstructionEmulator.h"
 #include "../emulator/instruction/data/conditional/CmovsInstructionEmulator.h"
 #include "../emulator/instruction/data/conditional/CmovzInstructionEmulator.h"
+#include "../emulator/instruction/data/conditional/SetnzInstructionEmulator.h"
 #include "../emulator/instruction/data/logical/AndInstructionEmulator.h"
 #include "../emulator/instruction/data/logical/NegInstructionEmulator.h"
 #include "../emulator/instruction/data/logical/NotInstructionEmulator.h"
@@ -41,6 +41,7 @@
 #include "../emulator/instruction/data/math/AddInstrucionEmulator.h"
 #include "../emulator/instruction/data/math/DecInstructionEmulator.h"
 #include "../emulator/instruction/data/math/IncInstructionEmulator.h"
+#include "../emulator/instruction/data/math/MulInstructionEmulator.h"
 #include "../emulator/instruction/data/math/SubInstructionEmulator.h"
 #include "../emulator/instruction/flow/CallInstructionEmulator.h"
 #include "../emulator/instruction/flow/JmpInstructionEmulator.h"
@@ -71,6 +72,7 @@
 #include "../emulator/syscall/io/WritevInstructionEmulator.h"
 #include "../emulator/syscall/memory/BrkSyscallEmulator.h"
 #include "../emulator/syscall/memory/MmapSyscallEmulator.h"
+#include "../emulator/syscall/memory/MprotectSyscallEmulator.h"
 #include "../emulator/syscall/memory/MunmapSyscallEmulator.h"
 #include "../emulator/syscall/process/ArchPrctlSyscallEmulator.h"
 #include "../emulator/syscall/process/ExitGroupSyscallEmulator.h"
@@ -82,6 +84,7 @@
 #include "../emulator/syscall/stat/GetgidSyscallEmulator.h"
 #include "../emulator/syscall/stat/GetuidSyscallEmulator.h"
 #include "../emulator/syscall/stat/UnameSyscallEmulator.h"
+#include "ProcessState.h"
 
 // clang-format off
 const std::vector<std::pair<ZydisMnemonic, std::function<std::unique_ptr<InstructionEmulator>(ProcessorRegisters&)>>> kInstructionEmulatorMap = { //NOLINT
@@ -116,6 +119,7 @@ const std::vector<std::pair<ZydisMnemonic, std::function<std::unique_ptr<Instruc
     { ZYDIS_MNEMONIC_DEC,     [](ProcessorRegisters& registers) { return std::make_unique<DecInstructionEmulator>(registers); } },
     { ZYDIS_MNEMONIC_INC,     [](ProcessorRegisters& registers) { return std::make_unique<IncInstructionEmulator>(registers); } },
     { ZYDIS_MNEMONIC_SUB,     [](ProcessorRegisters& registers) { return std::make_unique<SubInstructionEmulator>(registers); } },
+    { ZYDIS_MNEMONIC_MUL,     [](ProcessorRegisters& registers) { return std::make_unique<MulInstructionEmulator>(registers); } },
     { ZYDIS_MNEMONIC_AND,     [](ProcessorRegisters& registers) { return std::make_unique<AndInstructionEmulator>(registers); } },
     { ZYDIS_MNEMONIC_NEG,     [](ProcessorRegisters& registers) { return std::make_unique<NegInstructionEmulator>(registers); } },
     { ZYDIS_MNEMONIC_NOT,     [](ProcessorRegisters& registers) { return std::make_unique<NotInstructionEmulator>(registers); } },
@@ -139,7 +143,9 @@ const std::vector<std::pair<ZydisMnemonic, std::function<std::unique_ptr<Instruc
     { ZYDIS_MNEMONIC_CMOVP,   [](ProcessorRegisters& registers) { return std::make_unique<CmovpInstructionEmulator>(registers); } },
     { ZYDIS_MNEMONIC_CMOVS,   [](ProcessorRegisters& registers) { return std::make_unique<CmovsInstructionEmulator>(registers); } },
     { ZYDIS_MNEMONIC_CMOVZ,   [](ProcessorRegisters& registers) { return std::make_unique<CmovzInstructionEmulator>(registers); } },
-    { ZYDIS_MNEMONIC_BT,   [](ProcessorRegisters& registers) { return std::make_unique<BtInstructionEmulator>(registers); } }
+    { ZYDIS_MNEMONIC_BT,   [](ProcessorRegisters& registers) { return std::make_unique<BtInstructionEmulator>(registers); } },
+    { ZYDIS_MNEMONIC_CDQE,   [](ProcessorRegisters& registers) { return std::make_unique<CdqeInstructionEmulator>(registers); } },
+    { ZYDIS_MNEMONIC_SETNZ,   [](ProcessorRegisters& registers) { return std::make_unique<SetnzInstructionEmulator>(registers); } },
 };
 // clang-format on
 
@@ -155,6 +161,7 @@ const std::vector<std::pair<UnixSyscall, std::function<std::unique_ptr<SyscallEm
     { kSysBrk, [](std::shared_ptr<HighLevelEmulationContext>& hlec) { return std::make_unique<BrkSyscallEmulator>(hlec); } },
     { kSysMmap, [](std::shared_ptr<HighLevelEmulationContext>& hlec) { return std::make_unique<MmapSyscallEmulator>(hlec); } },
     { kSysMunmap, [](std::shared_ptr<HighLevelEmulationContext>& hlec) { return std::make_unique<MunmapSyscallEmulator>(hlec); } },
+    { kSysMprotect, [](std::shared_ptr<HighLevelEmulationContext>& hlec) { return std::make_unique<MprotectSyscallEmulator>(hlec); } },
     { kSysArchPrctl, [](std::shared_ptr<HighLevelEmulationContext>& hlec) { return std::make_unique<ArchPrctlSyscallEmulator>(hlec); } },
     { kSysExitGroup, [](std::shared_ptr<HighLevelEmulationContext>& hlec) { return std::make_unique<ExitGroupSyscallEmulator>(hlec); } },
     { kSysRseq, [](std::shared_ptr<HighLevelEmulationContext>& hlec) { return std::make_unique<RseqSyscallEmulator>(hlec); } },

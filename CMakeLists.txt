@@ -264,6 +264,14 @@ add_executable(cbt
         # Network
         src/network/IdaTracingPluginServer.cc
         src/network/IdaTracingPluginServer.h
+        src/emulator/instruction/data/math/MulInstructionEmulator.cc
+        src/emulator/instruction/data/math/MulInstructionEmulator.h
+        src/emulator/syscall/memory/MprotectSyscallEmulator.cc
+        src/emulator/syscall/memory/MprotectSyscallEmulator.h
+        src/emulator/instruction/data/CdqeInstructionEmulator.cc
+        src/emulator/instruction/data/CdqeInstructionEmulator.h
+        src/emulator/instruction/data/conditional/SetnzInstructionEmulator.cc
+        src/emulator/instruction/data/conditional/SetnzInstructionEmulator.h
 )
 
 target_include_directories(cbt PRIVATE

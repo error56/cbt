@@ -12,6 +12,19 @@ std::string FilenameFromPath(const std::string& path) {
   return path.substr(pos + 1);
 }
 
+std::string ParentPathFromPath(const std::string& path) {
+  const auto pos = path.find_last_of('/');
+
+  if (pos == std::string::npos) {
+    return ".";
+  }
+  if (pos == 0) {
+    return "/";
+  }
+
+  return path.substr(0, pos);
+}
+
 InterceptionResult OpenSyscallEmulator::EmulateSyscall(
     ExecutionThread* thread) const noexcept {
   auto& registers = thread->GetGuestRegisters();
@@ -33,10 +46,12 @@ InterceptionResult OpenSyscallEmulator::EmulateSyscall(
     }
 
     const auto file_name = FilenameFromPath(path);
-    const auto entry =
-        emulation_context->vfs_root->Find(path, emulation_context->cwd);
+    const auto parent_path = ParentPathFromPath(path);
 
-    if (entry == nullptr) {
+    const auto parent_entry =
+        emulation_context->vfs_root->Find(parent_path, emulation_context->cwd);
+
+    if (parent_entry == nullptr) {
       // No parent dir
       registers.rax = -ENOENT;
 
@@ -44,7 +59,7 @@ InterceptionResult OpenSyscallEmulator::EmulateSyscall(
     }
 
     // Get directory from entry, make new file and add it to the directory
-    const auto dir = std::dynamic_pointer_cast<VfsDirectory>(entry);
+    const auto dir = std::dynamic_pointer_cast<VfsDirectory>(parent_entry);
     const auto new_file = std::make_shared<VfsFile>(file_name);
     dir->AddChild(new_file);
 
@@ -76,7 +91,7 @@ InterceptionResult OpenSyscallEmulator::EmulateSyscall(
       });
 
   const auto fd = emulation_context->file_descriptor_table
-                ->GetNextMonotonicallyIncreasingDescriptorId();
+                      ->GetNextMonotonicallyIncreasingDescriptorId();
   emulation_context->file_descriptor_table->AddDescriptor(fd, fd_entry);
 
   registers.rax = fd;

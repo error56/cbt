@@ -345,11 +345,11 @@ __attribute__((always_inline)) void ExecutionThread::PerformSegmentSwitch(
         kExitInstructions.end()) {
       return true;
     }
-    // spdlog::warn("Emulating {}...",
-    // ZydisMnemonicGetString(decoded.mnemonic));
 
     if (!instruction_emulators_.contains(decoded.mnemonic)) {
       spdlog::error("Cant emulate trivial basic block");
+      spdlog::warn("Mnemonic that caused to exit: {}",
+                   ZydisMnemonicGetString(decoded.mnemonic));
 
       // @todo: return false should fall back into the normal emulation in
       // case of weird opcode, not known instruction or combination of flags
