@@ -18,3 +18,19 @@ CBT is a sophisticated dynamic binary translator that enables real-time binary c
 - **Layered Handler Architecture**: User-defined and system handler prioritization
 - **Filesystem Virtualization**: Isolated virtual filesystem
 - **Anti-Evasion Measures**: Stealth execution environment
+
+## Examples
+
+The `examples/` directory contains small demonstration programs that showcase CBT possibilities. The included examples cover:
+
+- minimal C programs used to validate translation correctness,
+- tests for a subset of system calls currently supported by CBT,
+- simple applications illustrating instrumentation and resource virtualization.
+
+**Note:** CBT does not implement the full system-call set yet.  
+For maximum compatibility when building and running the examples, it is recommended to:
+
+- **statically link** all test programs,
+- compile them using **musl-gcc**, which minimizes external dependencies and ensures that binaries run correctly inside CBT’s virtualized environment.
+
+
